@@ -12,8 +12,7 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Large model files (too big for GitHub)
-models/best_transformer_model/
+# Temporary training folders
 bert_checkpoints/
 bert_results/
 
