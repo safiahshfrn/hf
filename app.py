@@ -432,8 +432,8 @@ if page == "🏠 Home":
         <div class="team-row">
             <div class="team-member">
                 <div class="avatar">S</div>
-                <div class="name">Syiqin</div>
-                <div class="role">Dataset &amp; Streamlit App</div>
+                <div class="name">Asyiqin</div>
+                <div class="role">Dataset </div>
             </div>
             <div class="team-member">
                 <div class="avatar">A</div>
@@ -443,7 +443,7 @@ if page == "🏠 Home":
             <div class="team-member">
                 <div class="avatar">S</div>
                 <div class="name">Saf</div>
-                <div class="role">Analysis &amp; Integration</div>
+                <div class="role">Analysis &amp; Integration &amp; Streamlit App</div>
             </div>
         </div>
     </div>
