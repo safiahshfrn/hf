@@ -310,25 +310,6 @@ def load_classical_model():
         return None, None
 
 @st.cache_resource
-def load_w2v_model():
-    try:
-        from gensim.models import Word2Vec
-        import numpy as np_inner
-        w2v = Word2Vec.load('models/word2vec.model')
-        lr  = joblib.load('models/lr_word2vec_model.pkl')
-        return w2v, lr
-    except Exception:
-        return None, None
-
-def text_to_w2v_vector(text, w2v_model):
-    import numpy as np_inner
-    words = text.split()
-    vecs = [w2v_model.wv[w] for w in words if w in w2v_model.wv]
-    if not vecs:
-        return np_inner.zeros(w2v_model.vector_size)
-    return np_inner.mean(vecs, axis=0)
-
-@st.cache_resource
 def load_bert_model():
     try:
         from transformers import pipeline
@@ -464,13 +445,12 @@ elif page == "🔍 Text Analyzer":
     stop_words, lemmatizer = load_nlp_tools()
     tfidf, svm = load_classical_model()
     bert_pipe  = load_bert_model()
-    w2v_model, w2v_lr = load_w2v_model()
 
     # Model selector
     st.markdown('<div class="model-selector-label">Choose Model</div>', unsafe_allow_html=True)
     model_choice = st.selectbox(
         "Choose model",
-        ["DistilBERT (Best — 93.7%)", "LinearSVC / SVM (90.6%)", "Logistic Regression + Word2Vec (44.7%)"],
+        ["DistilBERT (Best — 93.7%)", "LinearSVC / SVM (90.6%)"],
         label_visibility="collapsed"
     )
 
@@ -516,17 +496,6 @@ elif page == "🔍 Text Analyzer":
                     results = bert_pipe(user_input[:512])[0]
                     scores = {r['label']: r['score'] for r in results}
                     predicted = max(scores, key=scores.get)
-                    confidence = scores[predicted]
-
-                elif "Word2Vec" in model_choice:
-                    if w2v_model is None or w2v_lr is None:
-                        st.error("Word2Vec model failed to load. Run: pip install gensim")
-                        st.stop()
-                    clean = preprocess(user_input, stop_words, lemmatizer)
-                    vec = text_to_w2v_vector(clean, w2v_model).reshape(1, -1)
-                    predicted = w2v_lr.predict(vec)[0]
-                    proba = w2v_lr.predict_proba(vec)[0]
-                    scores = {cls: float(p) for cls, p in zip(w2v_lr.classes_, proba)}
                     confidence = scores[predicted]
 
                 elif "SVM" in model_choice:
@@ -602,8 +571,6 @@ elif page == "🔍 Text Analyzer":
             words_in_vocab = []
             if "SVM" in model_choice and tfidf is not None:
                 words_in_vocab = [w for w in clean_for_words.split() if w in tfidf.vocabulary_]
-            elif "Word2Vec" in model_choice and w2v_model is not None:
-                words_in_vocab = [w for w in clean_for_words.split() if w in w2v_model.wv]
 
             if words_in_vocab:
                 chips = "".join([f'<span class="kw-chip">{w}</span>' for w in words_in_vocab])
@@ -755,13 +722,6 @@ elif page == "🤖 Model Info":
             "accuracy": 0.7578, "f1": 0.5754,
             "badge": "badge-basic", "badge_label": "📊 Baseline",
             "desc": "Multinomial Naive Bayes. Simple and fast but assumes word independence — this hurts on emotional text where phrase context matters."
-        },
-        {
-            "name": "Logistic Regression + Word2Vec",
-            "feature": "Word2Vec (averaged vectors)",
-            "accuracy": 0.4470, "f1": 0.3940,
-            "badge": "badge-basic", "badge_label": "📊 Comparison",
-            "desc": "Logistic Regression using averaged Word2Vec embeddings. Low accuracy shows that averaging vectors loses word order and context — 'not happy' and 'happy' get similar vectors. Included to show why feature choice matters."
         },
     ]
 
